@@ -1,0 +1,12 @@
+# all hidden files except .gitignore
+.*
+!.gitignore
+
+# all module compile files
+*.ko
+*.mod
+*.mod.c
+*.mod.o
+*.o
+*.order
+*.symvers

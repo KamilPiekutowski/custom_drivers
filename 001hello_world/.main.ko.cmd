@@ -1,0 +1,1 @@
+cmd_/home/kamilp/workspace/ldd/custom_drivers/001hello_world/main.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000  --build-id  -T ./scripts/module-common.lds -o /home/kamilp/workspace/ldd/custom_drivers/001hello_world/main.ko /home/kamilp/workspace/ldd/custom_drivers/001hello_world/main.o /home/kamilp/workspace/ldd/custom_drivers/001hello_world/main.mod.o;  true

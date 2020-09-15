@@ -8,7 +8,7 @@ static int __init helloworld_init(void)
 
 static void __exit helloworld_cleanup(void)
 {
-  pf_info("Goddbye world!\n");
+  pr_info("Goddbye world!\n");
 }
 
 module_init(helloworld_init);

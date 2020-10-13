@@ -230,7 +230,7 @@ int pcd_open (struct inode *inode, struct file *filep)
   /* Check permission */
   ret = check_permission(pcdev_data->perm, filep->f_mode);
 
-  (!ret) ? pr_info("Open was successful.\n") : pr_info("Open failed.\n");
+  (!ret) ? pr_info("Open was successful.\n") : pr_err("Open failed.\n");
 
   return ret;
 }

@@ -15,6 +15,10 @@
 #define DEV_MEM_SIZE_MAX_PCDEV3 1024
 #define DEV_MEM_SIZE_MAX_PCDEV4 512
 
+#define RDONLY 0x01
+#define WRONLY 0x10
+#define RDWR   0x11
+
 /* pseudo device memory */
 char device_buffer_pcdev1[DEV_MEM_SIZE_MAX_PCDEV1];
 char device_buffer_pcdev2[DEV_MEM_SIZE_MAX_PCDEV2];
@@ -51,25 +55,25 @@ struct pcdrv_private_data pcdrv_data =
       .buffer = device_buffer_pcdev1,
       .size = DEV_MEM_SIZE_MAX_PCDEV1,
       .serial_number = "PCDV1XYZ123",
-      .perm = 0x1 /* RDONLY */
+      .perm = RDONLY
     },
     [1] = {
       .buffer = device_buffer_pcdev2,
       .size = DEV_MEM_SIZE_MAX_PCDEV2,
       .serial_number = "PCDV2XYZ123",
-      .perm = 0x10 /* WRONLY */
+      .perm = WRONLY
     },
     [2] = {
       .buffer = device_buffer_pcdev3,
       .size = DEV_MEM_SIZE_MAX_PCDEV3,
       .serial_number = "PCDV3XYZ123",
-      .perm = 0x11 /* RDWR */
+      .perm = RDWR
     },
     [3] = {
       .buffer = device_buffer_pcdev4,
       .size = DEV_MEM_SIZE_MAX_PCDEV4,
       .serial_number = "PCDV4XYZ123",
-      .perm = 0x11 /* RDWR */
+      .perm = RDWR
     }
   }
 };
@@ -193,9 +197,17 @@ ssize_t pcd_write (struct file *filep, const char __user *buff, size_t count, lo
   return count;
 }
 
-int check_permission(void)
+int check_permission(int dev_perm, int access_mode)
 {
-  return 0;
+  if(dev_perm == RDWR)
+    return 0;
+  if((dev_perm == RDONLY) && ((access_mode & FMODE_READ) && !(access_mode & FMODE_WRITE) )) 
+    return 0;
+
+  if((dev_perm == WRONLY) && ((access_mode & FMODE_WRITE) && !(access_mode & FMODE_READ) ))
+    return 0;
+
+  return -EPERM;
 }
 
 int pcd_open (struct inode *inode, struct file *filep)
@@ -216,7 +228,7 @@ int pcd_open (struct inode *inode, struct file *filep)
   filep->private_data = pcdev_data;
 
   /* Check permission */
-  ret = check_permission();
+  ret = check_permission(pcdev_data->perm, filep->f_mode);
 
   (!ret) ? pr_info("Open was successful.\n") : pr_info("Open failed.\n");
 

@@ -247,13 +247,13 @@ static int __init pcd_driver_init(void)
 
     /* Register c device (dev structure) with VFS */
     pcdrv_data.pcdev_data[i].cdev.owner = THIS_MODULE;
-    ret =  cdev_add(&pcdrv_data.pcdev_data[i].cdev, pcdrv_data.device_number+i, 1);
+    ret =  cdev_add(&pcdrv_data.pcdev_data[i].cdev, pcdrv_data.device_number, 1);
     if(ret < 0)
       goto unreg_chardev;
 
 
     /* Populate sysfs with device information*/
-    pcdrv_data.device_pcd =  device_create(pcdrv_data.class_pcd, NULL, pcdrv_data.device_number+i, NULL, "pcdev-%d", i);
+    pcdrv_data.device_pcd =  device_create(pcdrv_data.class_pcd, NULL, pcdrv_data.device_number, NULL, "pcdev-%d", i);
     if(IS_ERR(pcdrv_data.device_pcd))
     {
       pr_info("Device creationfailed.\n");
@@ -270,10 +270,10 @@ class_destr:
   class_destroy(pcdrv_data.class_pcd);
 
 cdev_delete:
-  cdev_del(&pcdrv_data.pcdev_data[i].cdev);
+  cdev_del(&pcdrv_data[i].pcdev_data.cdev);
 
 unreg_chardev:
-  unregister_chrdev_region(pcdrv_data.device_number+i, NO_OF_DEVICES);
+  unregister_chrdev_region(pcdrv_data.device_number, NO_OF_DEvICES);
 
 out:
   return ret;

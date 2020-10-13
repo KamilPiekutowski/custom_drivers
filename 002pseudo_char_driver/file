@@ -1,0 +1,10 @@
+
+Raspberry Pi (master) Arduino Uno (slave) SPI communication with WiringPi
+
+In this tutorial I’ll show you how to communicate between a Raspberry Pi 4 (also works with 3, 3B, 3B+) and an Arduino (Uno), using the SPI protocol.
+
+The Raspberry Pi will be configured as a master, and the Arduino as a slave. On Raspberry Pi we’ll use the WiringPi library inside a Cpp code example. More specifically we’ll use the WiringPiSPI sub-part of the library.
+
+The goal of this tutorial is to send a byte from the Raspberry Pi to the Arduino, process this byte, and receive the new value on the Raspberry Pi.
+
+Make sure to read this introduction to WiringPi before if you don’t know the library well.

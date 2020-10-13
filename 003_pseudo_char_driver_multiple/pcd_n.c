@@ -77,7 +77,10 @@ struct pcdrv_private_data pcdrv_data =
 
 loff_t pcd_lseek (struct file *filep, loff_t offset, int whence)
 {
-#if 0
+
+  struct pcdev_private_data *pcdev_data = (struct pcdev_private_data*) filep->private_data;
+
+  int max_size = pcdev_data->size;
   loff_t temp;
 
   pr_info("lseek requested \n");
@@ -86,7 +89,7 @@ loff_t pcd_lseek (struct file *filep, loff_t offset, int whence)
   switch(whence)
   {
     case SEEK_SET:
-      if((offset > DEV_MEM_SIZE) || (offset < 0))
+      if((offset > max_size) || (offset < 0))
       {
         return -EINVAL;
       }
@@ -94,15 +97,15 @@ loff_t pcd_lseek (struct file *filep, loff_t offset, int whence)
       break;
     case SEEK_CUR:
       temp = filep->f_pos + offset;
-      if((temp > DEV_MEM_SIZE) || (temp < 0))
+      if((temp > max_size) || (temp < 0))
       {
         return -EINVAL;
       }
       filep->f_pos = temp;;
       break;
     case SEEK_END:
-      temp = DEV_MEM_SIZE + offset;
-      if((temp > DEV_MEM_SIZE) || (temp < 0))
+      temp = max_size + offset;
+      if((temp > max_size) || (temp < 0))
       {
         return -EINVAL;
       }
@@ -115,25 +118,27 @@ loff_t pcd_lseek (struct file *filep, loff_t offset, int whence)
   pr_info("New value of the file position = %lld\n", filep->f_pos);
 
   return filep->f_pos;
-#endif
-  return 0;
 }
 
 ssize_t pcd_read (struct file *filep, char __user *buff, size_t count, loff_t *f_pos)
 {
-#if 0
+  struct pcdev_private_data *pcdev_data = (struct pcdev_private_data*) filep->private_data;
+
+  int max_size = pcdev_data->size;
+
+
   pr_info("Read requsted for %zu bytes\n", count);
   pr_info("Current file position = %lld\n", *f_pos);
 
   /* Adjust the 'count' */
-  if(*f_pos + count > DEV_MEM_SIZE)
+  if(*f_pos + count > max_size)
   {
-    count = DEV_MEM_SIZE - *f_pos;
+    count = max_size - *f_pos;
   }
 
 
   /* Copy to user */
-  if(copy_to_user(buff, &device_buffer[*f_pos], count))
+  if(copy_to_user(buff, &pcdev_data->buffer + (*f_pos), count))
   {
     return -EFAULT;
   }
@@ -147,25 +152,26 @@ ssize_t pcd_read (struct file *filep, char __user *buff, size_t count, loff_t *f
 
   /* Return number of bytes which have been succesfully copied */
   return count;
-#endif
-  return 0;
 }
 
 ssize_t pcd_write (struct file *filep, const char __user *buff, size_t count, loff_t *f_pos)
 {
-#if 0
+  struct pcdev_private_data *pcdev_data = (struct pcdev_private_data*) filep->private_data;
+
+  int max_size = pcdev_data->size;
+
   pr_info("write requested for %zu bytes \n", count);
   pr_info("Current file position = %lld\n", *f_pos);
 
   /* Adjust the 'count' */
-  if(*f_pos + count > DEV_MEM_SIZE)
+  if(*f_pos + count > max_size)
   {
-    count = DEV_MEM_SIZE - *f_pos;
+    count = max_size - *f_pos;
   }
 
 
   /* Copy from user */
-  if(copy_from_user(&device_buffer[*f_pos], buff, count))
+  if(copy_from_user(&pcdev_data->buffer + (*f_pos), buff, count))
   {
     return -EFAULT;
   }
@@ -185,17 +191,36 @@ ssize_t pcd_write (struct file *filep, const char __user *buff, size_t count, lo
 
   /* Return number of bytes which have been succesfully written */
   return count;
-#endif
-  return -ENOMEM;
+}
+
+int check_permission(void)
+{
+  return 0;
 }
 
 int pcd_open (struct inode *inode, struct file *filep)
-
 {
-  pr_info("Open was succesfull \n");
+  int ret;
+  int minor_num;
 
+  struct pcdev_private_data *pcdev_data;
 
-  return 0;
+  /* Find out on which device file open was attempted by the user space  */
+
+  minor_num = MINOR(inode->i_rdev);
+  pr_info("Minor number access = %d\n", minor_num);
+
+  /* Get device's private date structure */
+  pcdev_data = container_of(inode->i_cdev, struct pcdev_private_data, cdev);
+
+  filep->private_data = pcdev_data;
+
+  /* Check permission */
+  ret = check_permission();
+
+  (!ret) ? pr_info("Open was successful.\n") : pr_info("Open failed.\n");
+
+  return ret;
 }
 
 int pcd_release (struct inode *inode, struct file *filep)

@@ -36,18 +36,44 @@ struct pcdev_private_data
 struct pcdrv_private_data
 {
   int total_devices;
-  struct pcdev_private_data pcded_data[NO_OF_DEVICES];
+  /* this holds device number */
+  dev_t device_number;
+  struct class *class_pcd;
+  struct device *device_pcd;
+  struct pcdev_private_data pcdev_data[NO_OF_DEVICES];
 };
 
+struct pcdrv_private_data pcdrv_data = 
+{
+  .total_devices = NO_OF_DEVICES,
+  .pcdev_data = {
+    [0] = {
+      .buffer = device_buffer_pcdev1,
+      .size = DEV_MEM_SIZE_MAX_PCDEV1,
+      .serial_number = "PCDV1XYZ123",
+      .perm = 0x1 /* RDONLY */
+    },
+    [1] = {
+      .buffer = device_buffer_pcdev2,
+      .size = DEV_MEM_SIZE_MAX_PCDEV2,
+      .serial_number = "PCDV2XYZ123",
+      .perm = 0x10 /* WRONLY */
+    },
+    [2] = {
+      .buffer = device_buffer_pcdev3,
+      .size = DEV_MEM_SIZE_MAX_PCDEV3,
+      .serial_number = "PCDV3XYZ123",
+      .perm = 0x11 /* RDWR */
+    },
+    [3] = {
+      .buffer = device_buffer_pcdev4,
+      .size = DEV_MEM_SIZE_MAX_PCDEV4,
+      .serial_number = "PCDV4XYZ123",
+      .perm = 0x11 /* RDWR */
+    }
+  }
+};
 
-
-
-
-/* this holds device number */
-dev_t device_number;
-
-/*  Cdev variable */
-struct cdev pcd_cdev;
 
 loff_t pcd_lseek (struct file *filep, loff_t offset, int whence)
 {
@@ -188,10 +214,6 @@ struct file_operations pcd_fops =
   .release = pcd_release,
   .owner   = THIS_MODULE,
 };
-
-struct class *class_pcd;
-
-struct device *device_pcd;
 
 
 static int __init pcd_driver_init(void)
